@@ -157,3 +157,53 @@ class res_partner(models.Model):
 </field>
 ```
 
+
+### xpath expressions
+#### Creating new fields
+
+```
+from openerp import models, fields, api
+
+class on_change_function(models.Model):
+    #Inhertis the model product.template
+    _inherit = 'product.template'
+    #Creates two new fields (CostPrice and ShippingCost) in the model product.template
+    CostPrice = fields.Float('Buy price')
+    ShippingCost = fields.Float('Shipping Cost')
+    FieldAfterGroup = fields.Char(string='Field After Group')
+    FieldNewPage = fields.Char(string='Field New Page')
+```
+
+#### Inherit exhisting views
+
+```
+<record id="view_product_form_inherit" model="ir.ui.view">
+  <field name="name">product.template.common.form.inherit</field>
+  <field name="model">product.template</field>
+  <field name="inherit_id" ref="product.product_template_form_view"/>
+```
+
+#### Xpath expressions
+
+```
+<xpath expr="//page[@string='Information']" position="after">
+  <page name="Sample" string="Custom page">
+    <group>
+      <field name="FieldNewPage"/>
+    </group>
+  </page>
+</xpath>
+```
+- In the Xpath:
+	- page is the tag
+	- @string is the string attribute of the page tag
+- Another example
+```
+<xpath expr="//page[@string='Information']/group" position="after">
+  <group>
+    <field name="FieldAfterGroup"/>
+  </group>
+</xpath>
+```
+This creates a new group after the group which resides in the page tag.
+
