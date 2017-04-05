@@ -43,3 +43,61 @@ class button_action_demo(models.Model):
     </field>
 </record>
 ```
+- the type="object" in the buttons tells Odoo we want to trigger Python code 
+
+#### Actions behind the buttons
+
+```
+@api.one
+def generate_record_name(self):
+    #Generates a random name between 9 and 15 characters long and writes it to the record.
+    self.write({'name': ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(randint(9,15)))})
+```
+- write: updates the current record
+
+### Finding and sending mail templates in Odoo
+- How to find email templates
+- How to call email templates
+- How to send them to the user
+
+#### Create the send email button
+
+header to inherited viewPython
+
+<odoo>
+  <data>
+      <record id="send_mail_partner_form_inherit" model="ir.ui.view">
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+          <!-- Add a header with button to the existing view -->
+          <xpath expr="//sheet" position="before">
+              <header>
+                <button name="send_mail_template" string="Send e-mail" type="object" class="oe_highlight"/>
+              </header>
+          </xpath>
+        </field>
+      </record>
+  </data>
+</odoo>
+
+
+from odoo import models, fields, api
+ 
+class res_partner(models.Model):
+    _inherit = 'res.partner'
+
+    @api.multi
+    def send_mail_template(self):
+        # Now let us find the e-mail template
+        template = self.env.ref('mail_template_demo.example_email_template')
+        # You can also find the e-mail template like this:
+        # template = self.env['ir.model.data'].get_object('mail_template_demo', 'example_email_template')
+
+        # Send the email
+        self.env['mail.template'].browse(template.id).send_mail(self.id)
+
+- mail_template_demo is the name of the module where the template resides
+- browse is used to fetch the correct
+
+### Creating email templates
