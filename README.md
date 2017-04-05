@@ -62,8 +62,7 @@ def generate_record_name(self):
 
 #### Create the send email button
 
-header to inherited viewPython
-
+```
 <odoo>
   <data>
       <record id="send_mail_partner_form_inherit" model="ir.ui.view">
@@ -81,7 +80,6 @@ header to inherited viewPython
   </data>
 </odoo>
 
-
 from odoo import models, fields, api
  
 class res_partner(models.Model):
@@ -97,7 +95,65 @@ class res_partner(models.Model):
         # Send the email
         self.env['mail.template'].browse(template.id).send_mail(self.id)
 
+```
+
 - mail_template_demo is the name of the module where the template resides
 - browse is used to fetch the correct
 
-### Creating email templates
+### Creating email templates 	
+- How to create tempaltes
+- How to add it to the templates
+
+#### dependencies
+
+```
+'depends': ['mail','contacts'],
+```
+
+#### Creating the email templates
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+    </data>
+</odoo>
+
+
+  <record id="example_email_template" model="mail.template">
+          <field name="name">Example e-mail template</field>
+          <field name="email_from">${object.company_id and object.company_id.email or ''}</field>
+          <field name="subject">Congratz ${object.name}</field>
+          <field name="email_to">${object.email|safe}</field>
+          <field name="lang">${object.lang}</field>
+          <field name="model_id" ref="base.model_res_partner"/>
+          <field name="auto_delete" eval="True"/>
+		  <field name="body_html">
+	              <![CDATA[
+		          <p>Dear ${(object.name)},<br/><br/>
+			  Good job, you've just created your first e-mail template!<br/></p>
+	                  Regards,<br/>
+	                  ${(object.company_id.name)}
+		    ]]>
+		  </field>
+   </record>
+```
+
+#### Using Jinja2 variables for parsing email templates
+
+- object is used to access all values from the existing model
+- dynamic email template:
+
+```
+<field name="body_html">
+              <![CDATA[
+                %if object.website:
+                  Because you have a website we might have a nice offer for you.<br/>
+                  We can host your website ${object.website} for free if you sign up now.
+                %endif
+	      ]]>
+	  
+</field>
+```
+
