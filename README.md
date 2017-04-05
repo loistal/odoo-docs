@@ -13,9 +13,9 @@ This following section is my personnal reference.
 *http://www.odoo.yenthevg.com/category/odoo-8/buttons/* 
 
 #### model and fields
-# -*- coding: utf-8 -*-
 from openerp import models, fields, api
 
+```
 class button_action_demo(models.Model):
     _name = 'button.demo'
     name = fields.Char(required=True,default='Click on generate name!')
@@ -42,3 +42,4 @@ class button_action_demo(models.Model):
 	</form>
     </field>
 </record>
+```
