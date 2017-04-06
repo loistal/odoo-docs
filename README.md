@@ -193,7 +193,7 @@ class on_change_function(models.Model):
     </group>
   </page>
 </xpath>
-```
+``` 
 - In the Xpath:
 	- page is the tag
 	- @string is the string attribute of the page tag
@@ -206,4 +206,243 @@ class on_change_function(models.Model):
 </xpath>
 ```
 This creates a new group after the group which resides in the page tag.
+
+### onchange event
+
+- automatically updates a field when another field changes
+
+```
+from openerp import models, fields, api
+
+class on_change_function(models.Model):
+    #Inhertis the model product.template
+    _inherit = 'product.template'
+    #Creates two new fields (CostPrice and ShippingCost) in the model product.template
+    CostPrice = fields.Float('Buy price')
+    ShippingCost = fields.Float('Shipping Cost')
+
+<field name="CostPrice" on_change="on_change_price(CostPrice,ShippingCost)"/>
+<field name="ShippingCost" on_change="on_change_price(CostPrice,ShippingCost)"/>
+
+
+    #This method will be called when either the field CostPrice or the field ShippingCost changes.
+    def on_change_price(self,cr,user,ids,CostPrice,ShippingCost,context=None):
+	#Calculate the total
+	total = CostPrice + ShippingCost
+        res = {
+            'value': {
+		#This sets the total price on the field standard_price.
+                'standard_price': total
+	      }
+	}
+	#Return the values to update it in the view.
+	return res
+```
+
+### Set default value Many2one
+
+'currency_id_invoices': fields.many2one('res.currency', string="Currency", required=True),
+
+```
+#This function automatically sets the currency to EUR.
+    def _get_default_currency(self, cr, uid, context=None):
+        res = self.pool.get('res.company').search(cr, uid, [('currency_id','=','EUR')], context=context)
+        return res and res[0] or False
+
+    #Default values that need to be set
+    defaults = {
+		'currency_id_invoices': _get_default_currency,
+    }
+
+```
+
+### Logging
+
+
+```
+Importing Python loggerPython
+
+#Import logger
+import logging
+#Get the logger
+_logger = logging.getLogger(__name__)
+
+
+```
+
+### Automatically fill Many2many
+
+```
+class print_order_sample(models.Model):
+    def _get_default_print_order_ids(self):
+	cr = self.pool.cursor()
+	self.env
+		# Get all the records from the model
+        return self.pool.get('sale.order.printorder').search(cr, self.env.uid, [])
+
+    _inherit = 'sale.order'
+    print_order_ids = fields.Many2many('sale.order.printorder','sale_order_print','print_id','order_print_id','Print order',help='This could be used to create a print order for your report, for example.',default=_get_default_print_order_ids)
+
+#Another method consists in creating dummy records
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+	<!--This will create some default records if they do not exist yet. We will always need these so these are auto-rendered. -->
+        <record id="goals_print_order" model="sale.order.printorder">
+            <field name="name">Goals</field>
+        </record>
+        <record id="workmethod_print_order" model="sale.order.printorder">
+            <field name="name">Work method</field>
+        </record>
+        <record id="approach_print_order" model="sale.order.printorder">
+            <field name="name">Approach</field>
+        </record>
+        <record id="orderlines_print_order" model="sale.order.printorder">
+            <field name="name">Orderlines</field>
+        </record>
+        <record id="about_print_order" model="sale.order.printorder">
+            <field name="name">About</field>
+        </record>
+        <record id="customer_print_order" model="sale.order.printorder">
+            <field name="name">Customer</field>
+        </record>
+        <record id="references_print_order" model="sale.order.printorder">
+            <field name="name">References</field>
+        </record>
+    </data>
+</openerp>
+```
+
+### Creating and managing statusbars
+- Show the progress that has been made
+- create buttons that change the state of the statusbar
+
+```
+class statusbar(models.Model):
+    _name = 'statusbar.demo'
+    name = fields.Char('Name', required=True)
+    """
+    This selection field contains all the possible values for the statusbar.
+    The first part is the database value, the second is the string that is showed. Example:
+    ('finished','Done'). 'finished' is the database key and 'Done' the value shown to the user
+    """
+    state = fields.Selection([
+            ('concept', 'Concept'),
+            ('started', 'Started'),
+            ('progress', 'In progress'),
+            ('finished', 'Done'),
+            ],default='concept')
+
+<record model="ir.ui.view" id="view_statusbar_form">
+    <field name="name">Statusbar</field>
+    <field name="model">statusbar.demo</field>
+    <field name="type">form</field>
+    <field name="arch" type="xml">
+	<form string="Workflow record">
+	<!--The header tag is built to add buttons within. This puts them at the top -->
+	<header>
+	    <button string="Set to concept" type="object" name="concept_progressbar" attrs="{'invisible': [('state', '=', 'concept')]}"/>
+	    <!--The oe_highlight class gives the button a red color when it is saved.
+	    It is usually used to indicate the expected behaviour. -->
+	    <button string="Set to started" type="object" name="started_progressbar" class="oe_highlight" attrs="{'invisible': [('state','!=','concept')]}"/>
+	    <button string="In progress" type="object" name="progress_progressbar" attrs="{'invisible': [('state','=','progress')]}"/>
+	    <button string="Done" type="object" name="done_progressbar" attrs="{'invisible': [('state','=','finished')]}"/>
+	    <!--This will create the statusbar, thanks to the widget. -->
+	    <field name="state" widget="statusbar"/>
+	</header>
+	<group>
+	    <field name="name"/>
+	</group>
+        </form>
+    </field>
+</record>
+
+#This function is triggered when the user clicks on the button 'Set to concept'
+@api.one
+def concept_progressbar(self):
+    self.write({
+        'state': 'concept',
+    })
+
+#This function is triggered when the user clicks on the button 'Set to started'
+@api.one
+def started_progressbar(self):
+    self.write({
+	'state': 'started'
+    })
+
+#This function is triggered when the user clicks on the button 'In progress'
+@api.one
+def progress_progressbar(self):
+    self.write({
+	'state': 'progress'
+    })
+
+#This function is triggered when the user clicks on the button 'Done'
+@api.one
+def done_progressbar(self):
+    self.write({
+	'state': 'finished',
+    })
+```
+- Buttons allow to change the state
+- the state widget allows to visualize the flow
+
+### Creating automated actions / Schedulers
+
+
+- in this example, we will create an automated action that runs every 2 minutes and loops over all the records from a certain model
+- An important thing to note with automated actions is that they should always be defined within a noupdate field since this shouldn’t be updated when you update your module
+```
+class scheduler_demo(models.Model):
+    _name = 'scheduler.demo'
+    name = fields.Char(required=True)
+    numberOfUpdates = fields.Integer('Number of updates', help='The number of times the scheduler has run and updated this field')
+    lastModified = fields.Date('Last updated')
+
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+        <record id="ir_cron_scheduler_demo_action" model="ir.cron">
+            <field name="name">Demo scheduler</field>
+            <field name="user_id" ref="base.user_root"/> <!-- user_id is a field of base.user_root -->
+            <field name="interval_number">2</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field> <!-- -1 to run forever (10 to run for 10 minutes) -->
+            <field eval="False" name="doall"/> <!-- False means that upon waking up the server after a period of downtime, the action should run and make up for that time -->
+            <field eval="'scheduler.demo'" name="model"/>
+            <field eval="'process_demo_scheduler_queue'" name="function"/>
+        </record>
+   </data>
+</openerp>
+
+class scheduler_demo(models.Model):
+    _name = 'scheduler.demo'
+    name = fields.Char(required=True)
+    numberOfUpdates = fields.Integer('Number of updates', help='The number of times the scheduler has run and updated this field')
+    lastModified = fields.Date('Last updated')
+
+    #This function is called when the scheduler goes off
+    def process_demo_scheduler_queue(self, cr, uid, context=None):
+
+
+    #This function is called when the scheduler goes off
+    def process_demo_scheduler_queue(self, cr, uid, context=None):
+	
+	scheduler_line_obj = self.pool.get('scheduler.demo')
+	
+	#Contains all ids for the model scheduler.demo
+  	scheduler_line_ids = self.pool.get('scheduler.demo').search(cr, uid, [])   
+	
+	#Loops over every record in the model scheduler.demo
+        for scheduler_line_id in scheduler_line_ids :
+	   		#Contains all details from the record in the variable scheduler_line
+            scheduler_line =scheduler_line_obj.browse(cr, uid,scheduler_line_id ,context=context)
+	    	numberOfUpdates = scheduler_line.numberOfUpdates
+	    	#Prints out the name of every record.
+            _logger.info('line: ' + scheduler_line.name)
+	    	#Update the record
+	    	scheduler_line_obj.write(cr, uid, scheduler_line_id, {'numberOfUpdates': (numberOfUpdates +1), 'lastModified': datetime.date.today()}, context=context)
+
+```
 
