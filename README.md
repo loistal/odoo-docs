@@ -511,3 +511,115 @@ class scheduler_demo(models.Model):
 
 ### QWeb
 
+- template engine 
+- template dirctives prefixed by t-
+- the <t> tag isn't rendered:
+
+```
+<t t-if="condition">
+    <p>Test</p>
+</t>
+```
+
+#### Data output
+- use esc
+
+```
+<p><t t-esc="value"/></p>
+```
+
+#### Output
+
+- t-foreach: provides the collection to iterate on
+- t-as: provides the designation of the current element
+
+```
+<t t-foreach="[1, 2, 3]" t-as="i">
+    <p><t t-esc="i"/></p>
+</t>
+
+# RESULTS IN
+<p>1</p>
+<p>2</p>
+<p>3</p>
+
+# Alternative
+<p t-foreach="[1, 2, 3]" t-as="i">
+    <t t-esc="i"/>
+</p>
+
+```
+
+#### Variables on i
+
+- the index of a foreach loop has several variables:
+	- i_all: the object being iterated over
+	- i_value: current iteration value (i provides the key)
+	- ...
+- can set custom variables:
+
+```
+<p t-foreach="[1, 2, 3]" t-as="i">
+    <t t-set="existing_variable" t-value="True"/>
+    <t t-set="new_variable" t-value="True"/>
+    <!-- existing_variable and new_variable now True -->
+</p>
+```
+
+#### Attributes (aka weird stuff)
+
+
+*Note:* $name is the name of the aatribute
+
+- t-attf-$name: used to mix strings and non-literal expressions:
+
+```
+<t t-foreach="[1, 2, 3]" t-as="item">
+    <li t-attf-class="row {{ item_parity }}"><t t-esc="item"/></li>
+</t>
+
+# RENDERED AS 
+<li class="row even">1</li>
+<li class="row odd">2</li>
+<li class="row even">3</li>
+```
+
+- t-att-$name:
+
+```
+<div t-att-a="42"/>
+# RENDERED AS 
+<div a="42"></div>
+
+<div t-att="{'a': 1, 'b': 2}"/>
+# RENDERED AS 
+<div a="1" b="2"></div>
+
+<div t-att="['a', 'b']"/>
+# RENDERED AS 
+<div a="b"></div>
+
+```
+
+#### Setting variables
+
+```
+<t t-set="foo" t-value="2 + 1"/>
+<t t-esc="foo"/>
+```
+
+#### Calling sub-templates
+
+- allows reuse
+
+```
+<t t-call="other-template"/>
+```
+
+- content set inside of the t-call is evaluated before rendering the sub-template
+
+```
+<t t-call="other-template">
+    <t t-set="var" t-value="1"/>
+</t>
+```
