@@ -446,3 +446,68 @@ class scheduler_demo(models.Model):
 
 ```
 
+### Inheriting and modifying QWeb reports
+
+- to inherit, you must know the module and the id of the original report
+- the correct report to inherit from is the one whose name and id end with "document"
+
+```
+<!-- Inherit quotation report (from module sale) -->
+<template id="report_quotation_inherit_demo" inherit_id="sale.report_saleorder_document">
+	<!-- Finds the first table with as class table table-condensed and gives the ability to modify it
+	This will replace everything withing tr (including tr)-->
+	<xpath expr="//table[@class='table table-condensed']//thead//tr" position="replace">
+	    <tr style="background-color:lightgray;">
+	        <th>Description</th>
+	        <th class="text-right">Price</th>
+	    </tr>
+	</xpath>
+	<xpath expr="//tbody[@class='sale_tbody']//tr//td[4]" position="replace">
+	</xpath>
+	<xpath expr="//tbody[@class='sale_tbody']//tr//td[3]" position="replace">
+	</xpath>
+	<xpath expr="//tbody[@class='sale_tbody']//tr//td[2]" position="replace">
+	</xpath>
+</template>
+```
+
+- add the original module to the dependencies of the custom module
+```
+'depends': ['sale'],
+```
+
+#### Reference
+
+
+#### General
+- external_layout_ adds the default header and footer 
+- the report content is inside of the <div class="page">
+- all fields of the docs objects can be received by the template
+
+#### In-report variables
+- docs: records for the current report
+- doc-ids: list of ids for the docs records
+- doc-model: model for the docs records
+- time: reference to the standards Python library time
+- user: record for the user printing the report
+- company: record for the current user's company
+
+#### Miscellanous
+- twitter and font awesome classes can be used in the template
+- can insert CSS locally
+- global CSS can be inserted this way:
+
+```
+<template id="report_saleorder_style" inherit_id="report.style">
+  <xpath expr=".">
+    <t>
+      .example-css-class {
+        background-color: red;
+      }
+    </t>
+  </xpath>
+</template>
+```
+
+### QWeb
+
