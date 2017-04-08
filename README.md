@@ -599,7 +599,7 @@ class scheduler_demo(models.Model):
 # RENDERED AS 
 <div a="b"></div>
 
-```
+``` 	
 
 #### Setting variables
 
@@ -621,5 +621,35 @@ class scheduler_demo(models.Model):
 ```
 <t t-call="other-template">
     <t t-set="var" t-value="1"/>
+</t>
+```
+
+#### Template inheritance
+
+- use t-extend
+
+```
+<t t-extend="base.template">
+    <t t-jquery="ul" t-operation="append">
+        <li>new element</li>
+    </t>
+</t>
+```
+
+#### debugging
+
+- t-log:
+
+```
+<t t-set="foo" t-value="42"/>
+<t t-log="foo"/>
+```
+
+- t-js
+
+```
+<t t-set="foo" t-value="42"/>
+<t t-js="ctx">
+    console.log("Foo is", ctx.foo);
 </t>
 ```
